@@ -1,16 +1,11 @@
-
 import { useState } from 'react';
+import './App.css';
 
-function Boton({
-  children,
-  alHacerClic,
-  variante = 'primario',
-  cargando = false
-}) {
+function Boton({ children, variante = 'primario', cargando = false }) {
   return (
     <button
+      type="submit"
       className={`boton boton--${variante}`}
-      onClick={alHacerClic}
       disabled={cargando}
     >
       {cargando ? 'Procesando...' : children}
@@ -19,13 +14,17 @@ function Boton({
 }
 
 function FilaEstudiante({ estudiante }) {
-  const estado = estudiante.nota >= 3.0 ? 'Aprobado' : 'Reprobado';
+  const estado = estudiante.nota >= 3 ? 'Aprobado' : 'Reprobado';
 
   return (
     <tr>
-      <td>{estudiante.nombre}</td>
+      <td className="nombre-estudiante">{estudiante.nombre}</td>
       <td>{estudiante.nota.toFixed(1)}</td>
-      <td>{estado}</td>
+      <td>
+        <span className={`insignia insignia--${estado.toLowerCase()}`}>
+          {estado}
+        </span>
+      </td>
     </tr>
   );
 }
@@ -33,67 +32,73 @@ function FilaEstudiante({ estudiante }) {
 function App() {
   const [estudiantes, setEstudiantes] = useState([
     { id: 1, nombre: 'Ana', nota: 4.5 },
-    { id: 2, nombre: 'Luis', nota: 2.8 }
   ]);
-
   const [nombre, setNombre] = useState('');
 
-  function agregarEstudiante() {
+  function agregar(evento) {
+    evento.preventDefault();
     const nombreLimpio = nombre.trim();
+    if (!nombreLimpio) return;
 
-    if (nombreLimpio === '') {
-      return;
-    }
-
-    const nuevoEstudiante = {
-      id: Date.now(),
-      nombre: nombreLimpio,
-      nota: 3.2
-    };
-
-    setEstudiantes([...estudiantes, nuevoEstudiante]);
+    setEstudiantes((actuales) => [
+      ...actuales,
+      { id: Date.now(), nombre: nombreLimpio, nota: 3.2 },
+    ]);
     setNombre('');
   }
 
   return (
-    <main className="contenedor">
-      <h1>Sistema académico</h1>
-      <h2>Registro de estudiantes</h2>
+    <main className="notas">
+      <header className="encabezado">
+        <span className="etiqueta">Gestión académica</span>
+        <h1>Notas de estudiantes</h1>
+        <p>Registra estudiantes y consulta su estado académico.</p>
+      </header>
 
-      <div className="formulario">
-        <input
-          type="text"
-          placeholder="Escribe el nombre del estudiante"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-        />
+      <section className="panel-notas" aria-labelledby="titulo-registro">
+        <div className="panel-encabezado">
+          <div>
+            <h2 id="titulo-registro">Registro de notas</h2>
+            <p>
+              {estudiantes.length}{' '}
+              {estudiantes.length === 1 ? 'estudiante registrado' : 'estudiantes registrados'}
+            </p>
+          </div>
+        </div>
 
-        <Boton
-          alHacerClic={agregarEstudiante}
-          variante="primario"
-        >
-          Agregar estudiante
-        </Boton>
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Nota</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {estudiantes.map((estudiante) => (
-            <FilaEstudiante
-              key={estudiante.id}
-              estudiante={estudiante}
+        <form className="formulario" onSubmit={agregar}>
+          <label htmlFor="nombre-estudiante">Nombre del estudiante</label>
+          <div className="controles-formulario">
+            <input
+              id="nombre-estudiante"
+              value={nombre}
+              onChange={(evento) => setNombre(evento.target.value)}
+              placeholder="Ej. María Gómez"
+              autoComplete="name"
+              required
             />
-          ))}
-        </tbody>
-      </table>
+            <Boton>Agregar estudiante</Boton>
+          </div>
+        </form>
+
+        <div className="tabla-contenedor">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Estudiante</th>
+                <th scope="col">Nota</th>
+                <th scope="col">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {estudiantes.map((estudiante) => (
+                <FilaEstudiante key={estudiante.id} estudiante={estudiante} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="nota-ayuda">La nota mínima aprobatoria es 3.0.</p>
+      </section>
     </main>
   );
 }
